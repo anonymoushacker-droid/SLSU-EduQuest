@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Puzzle Result - SLSU EduQuest</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <nav class="navbar">
+
+        <div class="nav-brand">
+            🎓 SLSU EduQuest
+        </div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+
+    </nav>
+
+
+    <main class="result-container">
+
+        <div class="result-card">
+
+            <div class="result-icon">
+                🎉
+            </div>
+
+            <div class="result-label">
+                PUZZLE COMPLETE
+            </div>
+
+            <h1>Great Job!</h1>
+
+            <p class="result-message">
+                You have completed the puzzle challenge.
+            </p>
+
+
+            <div class="result-score">
+
+                <span>Your Score</span>
+
+                <strong>
+                    {{ score }} / {{ total_questions }}
+                </strong>
+
+            </div>
+
+
+            <div class="earned-points">
+
+                <span>⭐</span>
+
+                <div>
+
+                    <small>POINTS EARNED</small>
+
+                    <strong>
+                        +{{ points_earned }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <p class="points-info">
+                Keep playing educational games to earn more points
+                and redeem rewards.
+            </p>
+
+
+            <div class="result-buttons">
+
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="primary-btn"
+                >
+                    Back to Dashboard
+                </a>
+
+                <a
+                    href="{{ url_for('puzzle') }}"
+                    class="secondary-btn"
+                >
+                    Play Again
+                </a>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

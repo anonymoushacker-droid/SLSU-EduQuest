@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Crossword - SLSU EduQuest</title>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+>
+```
+
+</head>
+
+<body class="quiz-page">
+
+```
+<!-- =================================
+     NAVIGATION
+================================== -->
+
+<nav class="navbar">
+
+    <div class="logo">
+        🎓 SLSU <span>EduQuest</span>
+    </div>
+
+
+    <div class="nav-buttons">
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="login-btn"
+        >
+            Dashboard
+        </a>
+
+
+        <a
+            href="{{ url_for('logout') }}"
+            class="register-btn"
+        >
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =================================
+     CROSSWORD GAME
+================================== -->
+
+<main class="crossword-game-container">
+
+
+    <!-- HEADER -->
+
+    <div class="crossword-game-header">
+
+        <div class="crossword-badge">
+            🧩 {{ course_code }} CROSSWORD
+        </div>
+
+
+        <h1>
+            {{ crossword.title }}
+        </h1>
+
+
+        <p>
+            Fill in the crossword using the clues below.
+        </p>
+
+    </div>
+
+
+
+    <!-- GAME CARD -->
+
+    <div class="crossword-game-card">
+
+
+        <!-- PROGRESS -->
+
+        <div class="crossword-info-bar">
+
+            <div>
+
+                <span>
+                    WORDS
+                </span>
+
+                <strong>
+                    {{ crossword.words|length }}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    POINTS
+                </span>
+
+                <strong>
+                    +10 each
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- CROSSWORD GRID -->
+
+        <div class="crossword-grid-wrapper">
+
+            <div
+                id="crosswordGrid"
+                class="crossword-grid"
+            ></div>
+
+        </div>
+
+
+
+        <!-- INSTRUCTIONS -->
+
+        <div class="crossword-instructions">
+
+            <span>💡</span>
+
+            <p>
+                Click a square and type the answer.
+                Use the arrow keys to move between cells.
+            </p>
+
+        </div>
+
+
+
+        <!-- CLUES -->
+
+        <div class="crossword-clues">
+
+
+            <!-- ACROSS -->
+
+            <div class="crossword-clue-section">
+
+                <h2>
+                    ➡️ Across
+                </h2>
+
+
+                <div
+                    id="acrossClues"
+                    class="clue-list"
+                ></div>
+
+            </div>
+
+
+
+            <!-- DOWN -->
+
+            <div class="crossword-clue-section">
+
+                <h2>
+                    ⬇️ Down
+                </h2>
+
+
+                <div
+                    id="downClues"
+                    class="clue-list"
+                ></div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- FORM -->
+
+        <form
+            id="crosswordForm"
+            action="{{ url_for('crossword_answer') }}"
+            method="POST"
+        >
+
+            <div id="hiddenAnswers"></div>
+
+
+            <div class="crossword-buttons">
+
+                <button
+                    type="button"
+                    id="clearCrossword"
+                    class="crossword-clear-btn"
+                >
+                    ↩ Clear Puzzle
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="crossword-submit-btn"
+                >
+                    ✓ Check Crossword
+                </button>
+
+            </div>
+
+        </form>
+
+
+
+    </div>
+
+
+
+    <!-- BACK -->
+
+    <a
+        href="{{ url_for('dashboard') }}"
+        class="crossword-back-link"
+    >
+        ← Back to Dashboard
+    </a>
+
+
+</main>
+
+
+
+<!-- =================================
+     CROSSWORD DATA
+================================== -->
+
+<script
+    id="crossword-data"
+    type="application/json"
+>
+    {{ crossword.words | tojson }}
+</script>
+
+
+
+<!-- =================================
+     JAVASCRIPT
+================================== -->
+
+<script>
+
+    /*
+    ============================================================
+    GET CROSSWORD DATA
+    ============================================================
+    */
+
+    const crosswordDataElement =
+        document.getElementById(
+            "crossword-data"
+        );
+
+
+    const crosswordWords =
+        JSON.parse(
+            crosswordDataElement.textContent
+        );
+
+
+
+    /*
+    ============================================================
+    GET HTML ELEMENTS
+    ============================================================
+    */
+
+    const grid =
+        document.getElementById(
+            "crosswordGrid"
+        );
+
+
+    const acrossClues =
+        document.getElementById(
+            "acrossClues"
+        );
+
+
+    const downClues =
+        document.getElementById(
+            "downClues"
+        );
+
+
+    const hiddenAnswers =
+        document.getElementById(
+            "hiddenAnswers"
+        );
+
+
+    const clearButton =
+        document.getElementById(
+            "clearCrossword"
+        );
+
+
+
+    /*
+    ============================================================
+    STORE CROSSWORD CELLS
+
+    IMPORTANT:
+    This must stay "let" because the object is recreated.
+    ============================================================
+    */
+
+    let cells = {};
+
+
+
+    /*
+    ============================================================
+    FIND GRID SIZE
+    ============================================================
+    */
+
+    let maxRow = 0;
+    let maxCol = 0;
+
+
+    crosswordWords.forEach(
+        function(word) {
+
+            const answer =
+                String(
+                    word.answer || ""
+                ).toUpperCase();
+
+
+            const length =
+                answer.length;
+
+
+            const row =
+                Number(word.row);
+
+
+            const col =
+                Number(word.col);
+
+
+            if (
+                word.direction ===
+                "across"
+            ) {
+
+                maxRow =
+                    Math.max(
+                        maxRow,
+                        row
+                    );
+
+
+                maxCol =
+                    Math.max(
+                        maxCol,
+                        col + length - 1
+                    );
+
+            }
+
+
+            else if (
+                word.direction ===
+                "down"
+            ) {
+
+                maxRow =
+                    Math.max(
+                        maxRow,
+                        row + length - 1
+                    );
+
+
+                maxCol =
+                    Math.max(
+                        maxCol,
+                        col
+                    );
+
+            }
+
+        }
+    );
+
+
+
+    /*
+    ============================================================
+    CREATE CROSSWORD CELLS
+    ============================================================
+    */
+
+    function buildCells() {
+
+        /*
+        Reset cells.
+        */
+
+        cells = {};
+
+
+        /*
+        Clear existing grid.
+        */
+
+        grid.innerHTML = "";
+
+
+        /*
+        Set grid columns.
+        */
+
+        grid.style.gridTemplateColumns =
+            `repeat(${maxCol + 1}, 42px)`;
+
+
+        /*
+        Create cells from crossword words.
+        */
+
+        crosswordWords.forEach(
+            function(word) {
+
+                const answer =
+                    String(
+                        word.answer || ""
+                    ).toUpperCase();
+
+
+                const startRow =
+                    Number(word.row);
+
+
+                const startCol =
+                    Number(word.col);
+
+
+                for (
+                    let i = 0;
+                    i < answer.length;
+                    i++
+                ) {
+
+                    let row =
+                        startRow;
+
+
+                    let col =
+                        startCol;
+
+
+                    if (
+                        word.direction ===
+                        "across"
+                    ) {
+
+                        col += i;
+
+                    }
+
+                    else {
+
+                        row += i;
+
+                    }
+
+
+                    const key =
+                        `${row},${col}`;
+
+
+                    /*
+                    Only create the cell once.
+                    */
+
+                    if (
+                        !cells[key]
+                    ) {
+
+                        const cell =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        cell.className =
+                            "crossword-cell";
+
+
+                        const input =
+                            document.createElement(
+                                "input"
+                            );
+
+
+                        input.type =
+                            "text";
+
+
+                        input.maxLength =
+                            1;
+
+
+                        input.autocomplete =
+                            "off";
+
+
+                        input.className =
+                            "crossword-input";
+
+
+                        input.dataset.row =
+                            row;
+
+
+                        input.dataset.col =
+                            col;
+
+
+                        input.dataset.key =
+                            key;
+
+
+                        cell.appendChild(
+                            input
+                        );
+
+
+                        cells[key] = {
+
+                            element: cell,
+
+                            input: input
+
+                        };
+
+                    }
+
+                }
+
+            }
+        );
+
+
+
+        /*
+        ========================================================
+        ADD CLUE NUMBERS
+        ========================================================
+        */
+
+        crosswordWords.forEach(
+            function(word) {
+
+                const key =
+                    `${Number(word.row)},${Number(word.col)}`;
+
+
+                if (
+                    !cells[key]
+                ) {
+
+                    return;
+
+                }
+
+
+                /*
+                Don't add the number twice.
+                */
+
+                if (
+                    cells[key]
+                        .element
+                        .querySelector(
+                            ".crossword-number"
+                        )
+                ) {
+
+                    return;
+
+                }
+
+
+                const number =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                number.className =
+                    "crossword-number";
+
+
+                number.textContent =
+                    word.number;
+
+
+                cells[key]
+                    .element
+                    .appendChild(
+                        number
+                    );
+
+            }
+        );
+
+
+
+        /*
+        ========================================================
+        BUILD VISUAL GRID
+        ========================================================
+        */
+
+        rebuildGrid();
+
+    }
+
+
+
+    /*
+    ============================================================
+    REBUILD VISUAL GRID
+    ============================================================
+    */
+
+    function rebuildGrid() {
+
+        grid.innerHTML = "";
+
+
+        for (
+            let row = 0;
+            row <= maxRow;
+            row++
+        ) {
+
+            for (
+                let col = 0;
+                col <= maxCol;
+                col++
+            ) {
+
+                const key =
+                    `${row},${col}`;
+
+
+                if (
+                    cells[key]
+                ) {
+
+                    grid.appendChild(
+                        cells[key].element
+                    );
+
+                }
+
+                else {
+
+                    const blocked =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    blocked.className =
+                        "crossword-block";
+
+
+                    grid.appendChild(
+                        blocked
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+
+    /*
+    ============================================================
+    CREATE CLUES
+    ============================================================
+    */
+
+    function createClues() {
+
+        acrossClues.innerHTML =
+            "";
+
+
+        downClues.innerHTML =
+            "";
+
+
+        crosswordWords.forEach(
+            function(word) {
+
+                const clue =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                clue.className =
+                    "crossword-clue";
+
+
+                const number =
+                    document.createElement(
+                        "strong"
+                    );
+
+
+                number.textContent =
+                    `${word.number}. `;
+
+
+                const text =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                text.textContent =
+                    word.clue;
+
+
+                clue.appendChild(
+                    number
+                );
+
+
+                clue.appendChild(
+                    text
+                );
+
+
+                /*
+                Add clue to correct section.
+                */
+
+                if (
+                    word.direction ===
+                    "across"
+                ) {
+
+                    acrossClues.appendChild(
+                        clue
+                    );
+
+                }
+
+                else {
+
+                    downClues.appendChild(
+                        clue
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    /*
+    ============================================================
+    INPUT CONTROLS
+    ============================================================
+    */
+
+    function setupInputs() {
+
+        Object.values(
+            cells
+        ).forEach(
+            function(cell) {
+
+                const input =
+                    cell.input;
+
+
+
+                /*
+                =================================================
+                USER TYPES LETTER
+                =================================================
+                */
+
+                input.addEventListener(
+                    "input",
+                    function() {
+
+                        this.value =
+                            this.value
+                                .replace(
+                                    /[^a-zA-Z]/g,
+                                    ""
+                                )
+                                .toUpperCase()
+                                .slice(
+                                    0,
+                                    1
+                                );
+
+
+                        /*
+                        Move to next cell
+                        when a letter is entered.
+                        */
+
+                        if (
+                            this.value
+                        ) {
+
+                            moveToNextCell(
+                                this
+                            );
+
+                        }
+
+
+                        updateHiddenAnswers();
+
+                    }
+                );
+
+
+
+                /*
+                =================================================
+                KEYBOARD CONTROLS
+                =================================================
+                */
+
+                input.addEventListener(
+                    "keydown",
+                    function(event) {
+
+
+                        /*
+                        BACKSPACE
+                        */
+
+                        if (
+                            event.key ===
+                            "Backspace"
+                        ) {
+
+                            if (
+                                this.value ===
+                                ""
+                            ) {
+
+                                event.preventDefault();
+
+
+                                moveToPreviousCell(
+                                    this
+                                );
+
+                            }
+
+                        }
+
+
+
+                        /*
+                        ARROW RIGHT
+                        */
+
+                        else if (
+                            event.key ===
+                            "ArrowRight"
+                        ) {
+
+                            event.preventDefault();
+
+
+                            moveDirection(
+                                this,
+                                0,
+                                1
+                            );
+
+                        }
+
+
+
+                        /*
+                        ARROW LEFT
+                        */
+
+                        else if (
+                            event.key ===
+                            "ArrowLeft"
+                        ) {
+
+                            event.preventDefault();
+
+
+                            moveDirection(
+                                this,
+                                0,
+                                -1
+                            );
+
+                        }
+
+
+
+                        /*
+                        ARROW DOWN
+                        */
+
+                        else if (
+                            event.key ===
+                            "ArrowDown"
+                        ) {
+
+                            event.preventDefault();
+
+
+                            moveDirection(
+                                this,
+                                1,
+                                0
+                            );
+
+                        }
+
+
+
+                        /*
+                        ARROW UP
+                        */
+
+                        else if (
+                            event.key ===
+                            "ArrowUp"
+                        ) {
+
+                            event.preventDefault();
+
+
+                            moveDirection(
+                                this,
+                                -1,
+                                0
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    }
+
+
+
+    /*
+    ============================================================
+    MOVE TO NEXT CELL
+    ============================================================
+    */
+
+    function moveToNextCell(
+        input
+    ) {
+
+        moveDirection(
+            input,
+            0,
+            1
+        );
+
+    }
+
+
+
+    /*
+    ============================================================
+    MOVE TO PREVIOUS CELL
+    ============================================================
+    */
+
+    function moveToPreviousCell(
+        input
+    ) {
+
+        moveDirection(
+            input,
+            0,
+            -1
+        );
+
+    }
+
+
+
+    /*
+    ============================================================
+    MOVE IN A DIRECTION
+    ============================================================
+    */
+
+    function moveDirection(
+        input,
+        rowChange,
+        colChange
+    ) {
+
+        let row =
+            parseInt(
+                input.dataset.row
+            );
+
+
+        let col =
+            parseInt(
+                input.dataset.col
+            );
+
+
+        row += rowChange;
+
+        col += colChange;
+
+
+        const key =
+            `${row},${col}`;
+
+
+        if (
+            cells[key]
+        ) {
+
+            cells[key]
+                .input
+                .focus();
+
+        }
+
+    }
+
+
+
+    /*
+    ============================================================
+    UPDATE HIDDEN FORM ANSWERS
+    ============================================================
+    */
+
+    function updateHiddenAnswers() {
+
+        hiddenAnswers.innerHTML =
+            "";
+
+
+        crosswordWords.forEach(
+            function(word) {
+
+                let answer =
+                    "";
+
+
+                const wordAnswer =
+                    String(
+                        word.answer || ""
+                    ).toUpperCase();
+
+
+                const startRow =
+                    Number(word.row);
+
+
+                const startCol =
+                    Number(word.col);
+
+
+                for (
+                    let i = 0;
+                    i < wordAnswer.length;
+                    i++
+                ) {
+
+                    let row =
+                        startRow;
+
+
+                    let col =
+                        startCol;
+
+
+                    if (
+                        word.direction ===
+                        "across"
+                    ) {
+
+                        col += i;
+
+                    }
+
+                    else {
+
+                        row += i;
+
+                    }
+
+
+                    const key =
+                        `${row},${col}`;
+
+
+                    if (
+                        cells[key]
+                    ) {
+
+                        answer +=
+                            cells[key]
+                                .input
+                                .value
+                                .toUpperCase();
+
+                    }
+
+                }
+
+
+
+                /*
+                Create hidden input.
+                */
+
+                const hidden =
+                    document.createElement(
+                        "input"
+                    );
+
+
+                hidden.type =
+                    "hidden";
+
+
+                hidden.name =
+                    `word_${word.number}`;
+
+
+                hidden.value =
+                    answer;
+
+
+                hiddenAnswers.appendChild(
+                    hidden
+                );
+
+            }
+        );
+
+    }
+
+
+
+    /*
+    ============================================================
+    CLEAR CROSSWORD
+    ============================================================
+    */
+
+    clearButton.addEventListener(
+        "click",
+        function() {
+
+            Object.values(
+                cells
+            ).forEach(
+                function(cell) {
+
+                    cell.input.value =
+                        "";
+
+                }
+            );
+
+
+            updateHiddenAnswers();
+
+
+            /*
+            Focus first cell.
+            */
+
+            const firstCell =
+                Object.values(
+                    cells
+                )[0];
+
+
+            if (
+                firstCell
+            ) {
+
+                firstCell.input.focus();
+
+            }
+
+        }
+    );
+
+
+
+    /*
+    ============================================================
+    START CROSSWORD
+    ============================================================
+    */
+
+    buildCells();
+
+    createClues();
+
+    setupInputs();
+
+    updateHiddenAnswers();
+
+</script>
+```
+
+</body>
+
+</html>

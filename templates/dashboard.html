@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {{ course.short_name }} Dashboard - SLSU EduQuest
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         NAVIGATION
+    ========================================== -->
+
+    <header class="navbar">
+
+        <div class="logo">
+
+            🎓 SLSU
+            <span>EduQuest</span>
+
+        </div>
+
+
+        <nav>
+
+            <a href="{{ url_for('dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="#games">
+                Games
+            </a>
+
+            <a href="#rewards">
+                Rewards
+            </a>
+
+            <a href="#profile">
+                Profile
+            </a>
+
+        </nav>
+
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =========================================
+         DASHBOARD
+    ========================================== -->
+
+    <main class="dashboard-container">
+
+
+        <!-- WELCOME -->
+
+        <section class="dashboard-welcome">
+
+            <div class="course-badge">
+
+                <span>
+                    {{ course.icon }}
+                </span>
+
+                <strong>
+                    {{ course.short_name }}
+                </strong>
+
+            </div>
+
+
+            <p class="welcome-text">
+                WELCOME BACK
+            </p>
+
+
+            <h1>
+                Hello, {{ student.name }}! 👋
+            </h1>
+
+
+            <p>
+                You're ready to continue your
+
+                <strong>
+                    {{ course.title }}
+                </strong>
+
+                learning quest.
+            </p>
+
+        </section>
+
+
+
+        <!-- =====================================
+             COURSE INFORMATION
+        ====================================== -->
+
+        <section class="course-banner">
+
+            <div class="course-banner-icon">
+                {{ course.icon }}
+            </div>
+
+
+            <div>
+
+                <p>
+                    YOUR COURSE
+                </p>
+
+                <h2>
+                    {{ course.short_name }}
+                </h2>
+
+                <h3>
+                    {{ course.name }}
+                </h3>
+
+                <span>
+                    {{ course.description }}
+                </span>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             STUDENT QUICK STATS
+        ====================================== -->
+
+        <section class="dashboard-stats">
+
+
+            <div class="stat-card">
+
+                <span>
+                    ⭐
+                </span>
+
+                <div>
+
+                    <small>
+                        POINTS
+                    </small>
+
+                    <strong>
+                        {{ student.points }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    🎮
+                </span>
+
+                <div>
+
+                    <small>
+                        GAMES
+                    </small>
+
+                    <strong>
+                        {{ course.games|length }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    🎁
+                </span>
+
+                <div>
+
+                    <small>
+                        REWARDS
+                    </small>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =====================================
+             GAMES
+        ====================================== -->
+
+        <section
+            class="dashboard-section"
+            id="games"
+        >
+
+            <div class="dashboard-section-heading">
+
+                <div>
+
+                    <p>
+                        YOUR LEARNING GAMES
+                    </p>
+
+                    <h2>
+                        {{ course.title }}
+                    </h2>
+
+                </div>
+
+                <span>
+                    {{ course.games|length }} Games
+                </span>
+
+            </div>
+
+
+            <div class="dashboard-game-grid">
+
+
+                {% for game in course.games %}
+
+                <div class="dashboard-game-card">
+
+
+                    <div class="dashboard-game-icon">
+
+                        {{ game.icon }}
+
+                    </div>
+
+
+                    <div class="game-card-content">
+
+                        <h3>
+                            {{ game.name }}
+                        </h3>
+
+                        <p>
+                            {{ game.description }}
+                        </p>
+
+
+                        <!-- FIRST GAME = QUIZ -->
+
+                        {% if loop.index == 1 %}
+
+                        <a
+                            href="{{ url_for('quiz', game_type='quiz') }}"
+                            class="play-game-btn"
+                        >
+                            Play Game →
+                        </a>
+
+
+                        <!-- SECOND GAME = PUZZLE -->
+
+                        {% elif loop.index == 2 %}
+
+                        <a
+                            href="{{ url_for('puzzle', game_type='puzzle') }}"
+                            class="play-game-btn"
+                        >
+                            Play Game →
+                        </a>
+
+
+                        <!-- THIRD GAME = CROSSWORD -->
+
+                        {% elif loop.index == 3 %}
+
+                        <a
+                            href="{{ url_for('crossword', game_type='crossword') }}"
+                            class="play-game-btn"
+                        >
+                            Play Game →
+                        </a>
+
+
+                        <!-- OTHER GAMES -->
+
+                        {% else %}
+
+                        <button
+                            class="play-game-btn"
+                            onclick="comingSoon('{{ game.name }}')"
+                        >
+                            Play Game →
+                        </button>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             REWARDS
+        ====================================== -->
+
+        <section
+            class="dashboard-section"
+            id="rewards"
+        >
+
+            <div class="dashboard-section-heading">
+
+                <div>
+
+                    <p>
+                        REWARD SYSTEM
+                    </p>
+
+                    <h2>
+                        Redeem Your Points
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="reward-dashboard-grid">
+
+
+                <!-- FREE PRINT -->
+
+                <div class="reward-dashboard-card">
+
+                    <div class="reward-dashboard-icon">
+                        🖨️
+                    </div>
+
+                    <h3>
+                        Free Print
+                    </h3>
+
+                    <p>
+                        Redeem your points for
+                        school printing.
+                    </p>
+
+                    <strong>
+                        100 Points
+                    </strong>
+
+
+                    <form
+                        action="{{ url_for('redeem_reward', reward_name='free-print') }}"
+                        method="POST"
+                    >
+
+                        <button
+                            type="submit"
+                            class="redeem-btn"
+                        >
+                            Redeem
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+
+                <!-- SCHOOL REVIEWER -->
+
+                <div class="reward-dashboard-card">
+
+                    <div class="reward-dashboard-icon">
+                        📚
+                    </div>
+
+                    <h3>
+                        School Reviewer
+                    </h3>
+
+                    <p>
+                        Redeem points for an
+                        available school reviewer.
+                    </p>
+
+                    <strong>
+                        200 Points
+                    </strong>
+
+
+                    <form
+                        action="{{ url_for('redeem_reward', reward_name='school-reviewer') }}"
+                        method="POST"
+                    >
+
+                        <button
+                            type="submit"
+                            class="redeem-btn"
+                        >
+                            Redeem
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+
+                <!-- MORE REWARDS -->
+
+                <div class="reward-dashboard-card">
+
+                    <div class="reward-dashboard-icon">
+                        🎁
+                    </div>
+
+                    <h3>
+                        More Rewards
+                    </h3>
+
+                    <p>
+                        More school rewards
+                        will be added later.
+                    </p>
+
+                    <strong>
+                        Coming Soon
+                    </strong>
+
+
+                    <button
+                        class="redeem-btn disabled"
+                        disabled
+                    >
+                        Coming Soon
+                    </button>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             PROFILE
+        ====================================== -->
+
+        <section
+            class="dashboard-card"
+            id="profile"
+        >
+
+            <h2>
+                👤 Student Profile
+            </h2>
+
+
+            <div class="student-info">
+
+
+                <div>
+
+                    <small>
+                        Student Name
+                    </small>
+
+                    <strong>
+                        {{ student.name }}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <small>
+                        Student ID
+                    </small>
+
+                    <strong>
+                        {{ student.student_id }}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <small>
+                        Email
+                    </small>
+
+                    <strong>
+                        {{ student.email }}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <small>
+                        Course
+                    </small>
+
+                    <strong>
+                        {{ student.course }}
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer>
+
+        <div class="footer-logo">
+            🎓 SLSU EduQuest
+        </div>
+
+        <p>
+            Educational Gaming and Reward Platform
+        </p>
+
+        <p class="copyright">
+            © 2026 SLSU EduQuest
+        </p>
+
+    </footer>
+
+
+
+    <!-- JAVASCRIPT -->
+
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}">
+    </script>
+
+
+</body>
+
+</html>

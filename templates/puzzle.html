@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Puzzle - SLSU EduQuest</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <style>
+        /* =========================================
+           PUZZLE PAGE
+        ========================================= */
+
+        .puzzle-page {
+            min-height: 100vh;
+            background: #f4f8fd;
+        }
+
+        .puzzle-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 45px 20px 80px;
+        }
+
+        .puzzle-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .puzzle-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            margin-bottom: 12px;
+            border-radius: 30px;
+            background: #e8f2ff;
+            color: #1769c2;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .puzzle-header h1 {
+            margin: 0 0 8px;
+            color: #19365e;
+            font-size: 38px;
+        }
+
+        .puzzle-header p {
+            margin: 0;
+            color: #6d7789;
+            font-size: 15px;
+        }
+
+        .puzzle-card {
+            width: 100%;
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 35px;
+            background: #ffffff;
+            border: 1px solid #e1e8f0;
+            border-radius: 22px;
+            box-shadow: 0 15px 50px rgba(30, 60, 100, 0.08);
+        }
+
+        /* =========================================
+           PROGRESS
+        ========================================= */
+
+        .puzzle-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            background: #e7edf5;
+            border-radius: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: #1d72d8;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+
+        /* =========================================
+           QUESTION
+        ========================================= */
+
+        .question-box {
+            padding: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+            background: #f5f9fe;
+            border: 1px solid #e2e9f2;
+            border-radius: 17px;
+        }
+
+        .question-label {
+            margin-bottom: 10px;
+            color: #1d72d8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .question-text {
+            margin: 0;
+            color: #19365e;
+            font-size: 22px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        .instruction {
+            margin: 0 0 20px;
+            text-align: center;
+            color: #68778d;
+            font-size: 14px;
+        }
+
+        /* =========================================
+           ANSWER AREA
+        ========================================= */
+
+        .answer-title {
+            margin-bottom: 10px;
+            color: #19365e;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .answer-area {
+            min-height: 72px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            background: #f7faff;
+            border: 2px dashed #cbd8e8;
+            border-radius: 15px;
+        }
+
+        .answer-placeholder {
+            color: #9aa7b8;
+            font-size: 14px;
+        }
+
+        .answer-letter {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: #1d72d8;
+            color: white;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 10px rgba(29, 114, 216, 0.18);
+            transition: 0.2s ease;
+        }
+
+        .answer-letter:hover {
+            transform: translateY(-2px);
+            background: #155fb5;
+        }
+
+        /* =========================================
+           LETTER TILES
+        ========================================= */
+
+        .letters-title {
+            margin-bottom: 10px;
+            color: #19365e;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .letters-area {
+            min-height: 100px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            background: #ffffff;
+            border: 1px solid #e1e8f0;
+            border-radius: 15px;
+        }
+
+        .letter-tile {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 10px;
+            background: #edf4fc;
+            color: #19365e;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(30, 60, 100, 0.08);
+            transition: 0.2s ease;
+        }
+
+        .letter-tile:hover {
+            background: #dcecff;
+            transform: translateY(-2px);
+        }
+
+        .letter-tile.used {
+            opacity: 0.3;
+            cursor: default;
+            transform: none;
+        }
+
+        /* =========================================
+           BUTTONS
+        ========================================= */
+
+        .puzzle-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .puzzle-btn {
+            min-width: 140px;
+            padding: 13px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .shuffle-btn {
+            background: #edf4fc;
+            color: #1d72d8;
+        }
+
+        .shuffle-btn:hover {
+            background: #dcecff;
+        }
+
+        .clear-btn {
+            background: #f1f3f6;
+            color: #526174;
+        }
+
+        .clear-btn:hover {
+            background: #e4e8ed;
+        }
+
+        .check-btn {
+            background: #1d72d8;
+            color: white;
+            box-shadow: 0 5px 15px rgba(29, 114, 216, 0.18);
+        }
+
+        .check-btn:hover {
+            background: #155fb5;
+            transform: translateY(-1px);
+        }
+
+        .back-btn {
+            display: block;
+            width: fit-content;
+            margin: 25px auto 0;
+            color: #1d72d8;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            color: #1559aa;
+        }
+
+        /* =========================================
+           MOBILE
+        ========================================= */
+
+        @media (max-width: 650px) {
+
+            .puzzle-wrapper {
+                padding: 30px 15px 60px;
+            }
+
+            .puzzle-card {
+                padding: 25px 18px;
+                border-radius: 18px;
+            }
+
+            .puzzle-header h1 {
+                font-size: 30px;
+            }
+
+            .question-text {
+                font-size: 18px;
+            }
+
+            .question-box {
+                padding: 22px 16px;
+            }
+
+            .letter-tile {
+                width: 42px;
+                height: 42px;
+                font-size: 16px;
+            }
+
+            .answer-letter {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .puzzle-actions {
+                flex-direction: column;
+            }
+
+            .puzzle-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="puzzle-page">
+
+    <!-- =========================================
+         NAVBAR
+    ========================================= -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="login-btn"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================================
+         MAIN PUZZLE
+    ========================================= -->
+
+    <main class="puzzle-wrapper">
+
+        <div class="puzzle-header">
+
+            <div class="puzzle-badge">
+                🧩 PUZZLE GAME
+            </div>
+
+            <h1>
+                Solve the Puzzle
+            </h1>
+
+            <p>
+                Arrange the letters to form the correct answer.
+            </p>
+
+        </div>
+
+
+        <div class="puzzle-card">
+
+            <!-- Progress -->
+
+            <div class="puzzle-progress">
+
+                <span>
+                    Question {{ question_number }}
+                    of {{ total_questions }}
+                </span>
+
+                <span>
+                    Score: {{ score }}
+                </span>
+
+            </div>
+
+
+            <div class="progress-track">
+
+                <div
+                    class="progress-bar"
+                    id="progressBar"
+                    data-progress="{{ (question_number / total_questions) * 100 }}"
+                ></div>
+
+            </div>
+
+
+            <!-- Question -->
+
+            <div class="question-box">
+
+                <div class="question-label">
+                    Your Question
+                </div>
+
+                <p class="question-text">
+                    {{ question.question }}
+                </p>
+
+            </div>
+
+
+            <p class="instruction">
+                Click the letters below to build your answer.
+                Click a selected letter to remove it.
+            </p>
+
+
+            <!-- Answer -->
+
+            <div class="answer-title">
+                Your Answer
+            </div>
+
+            <div
+                class="answer-area"
+                id="answerArea"
+            >
+
+                <span
+                    class="answer-placeholder"
+                    id="answerPlaceholder"
+                >
+                    Click letters below...
+                </span>
+
+            </div>
+
+
+            <!-- Available Letters -->
+
+            <div class="letters-title">
+                Available Letters
+            </div>
+
+            <div
+                class="letters-area"
+                id="lettersArea"
+            >
+            </div>
+
+
+            <!-- Buttons -->
+
+            <div class="puzzle-actions">
+
+                <button
+                    type="button"
+                    class="puzzle-btn shuffle-btn"
+                    id="shuffleButton"
+                >
+                    🔀 Shuffle
+                </button>
+
+                <button
+                    type="button"
+                    class="puzzle-btn clear-btn"
+                    id="clearButton"
+                >
+                    ✖ Clear
+                </button>
+
+                <button
+                    type="button"
+                    class="puzzle-btn check-btn"
+                    id="checkButton"
+                >
+                    ✓ Check Puzzle
+                </button>
+
+            </div>
+
+
+            <!-- Hidden Flask Form -->
+
+            <form
+                id="answerForm"
+                action="{{ url_for('puzzle_answer') }}"
+                method="POST"
+                style="display: none;"
+            >
+
+                <input
+                    type="hidden"
+                    name="answer"
+                    id="answerInput"
+                    value=""
+                >
+
+            </form>
+
+
+            <!-- Back -->
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="back-btn"
+            >
+                ← Back to Dashboard
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================================
+         PUZZLE DATA
+         MUST COME BEFORE JAVASCRIPT
+    ========================================= -->
+
+    <div
+        id="puzzleData"
+        data-answer="{{ question.answer }}"
+        style="display: none;"
+    ></div>
+
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================= -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                /* =========================================
+                   GET ELEMENTS
+                ========================================= */
+
+                const puzzleData =
+                    document.getElementById("puzzleData");
+
+                const lettersArea =
+                    document.getElementById("lettersArea");
+
+                const answerArea =
+                    document.getElementById("answerArea");
+
+                const answerPlaceholder =
+                    document.getElementById("answerPlaceholder");
+
+                const shuffleButton =
+                    document.getElementById("shuffleButton");
+
+                const clearButton =
+                    document.getElementById("clearButton");
+
+                const checkButton =
+                    document.getElementById("checkButton");
+
+                const answerInput =
+                    document.getElementById("answerInput");
+
+                const answerForm =
+                    document.getElementById("answerForm");
+
+                const progressBar =
+                    document.getElementById("progressBar");
+
+
+                /* =========================================
+                   GET CORRECT ANSWER
+                ========================================= */
+
+                const puzzleAnswer =
+                    puzzleData.dataset.answer || "";
+
+
+                /* =========================================
+                   VARIABLES
+                ========================================= */
+
+                let letters = [];
+
+                let selectedLetters = [];
+
+
+                /* =========================================
+                   CLEAN ANSWER
+                ========================================= */
+
+                function cleanAnswer(answer) {
+
+                    return String(answer)
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, "");
+
+                }
+
+
+                /* =========================================
+                   SHUFFLE
+                ========================================= */
+
+                function shuffleArray(array) {
+
+                    const shuffled = [...array];
+
+                    for (
+                        let i = shuffled.length - 1;
+                        i > 0;
+                        i--
+                    ) {
+
+                        const j =
+                            Math.floor(
+                                Math.random() * (i + 1)
+                            );
+
+                        [
+                            shuffled[i],
+                            shuffled[j]
+                        ] = [
+                            shuffled[j],
+                            shuffled[i]
+                        ];
+
+                    }
+
+                    return shuffled;
+
+                }
+
+
+                /* =========================================
+                   CREATE LETTERS
+                ========================================= */
+
+                function createLetters() {
+
+                    const answer =
+                        cleanAnswer(puzzleAnswer);
+
+                    if (!answer) {
+
+                        lettersArea.innerHTML =
+                            "<p style='color:#999;'>No puzzle letters available.</p>";
+
+                        return;
+
+                    }
+
+                    letters =
+                        answer.split("");
+
+                    letters =
+                        shuffleArray(letters);
+
+                    selectedLetters = [];
+
+                    renderLetters();
+
+                    renderAnswer();
+
+                }
+
+
+                /* =========================================
+                   DISPLAY LETTERS
+                ========================================= */
+
+                function renderLetters() {
+
+                    lettersArea.innerHTML = "";
+
+                    letters.forEach(
+                        function (letter, index) {
+
+                            const button =
+                                document.createElement("button");
+
+                            button.type = "button";
+
+                            button.className =
+                                "letter-tile";
+
+                            button.textContent =
+                                letter;
+
+                            const used =
+                                selectedLetters.some(
+                                    function (item) {
+
+                                        return item.index === index;
+
+                                    }
+                                );
+
+                            if (used) {
+
+                                button.classList.add("used");
+
+                                button.disabled = true;
+
+                            }
+
+                            button.addEventListener(
+                                "click",
+                                function () {
+
+                                    selectLetter(index);
+
+                                }
+                            );
+
+                            lettersArea.appendChild(button);
+
+                        }
+                    );
+
+                }
+
+
+                /* =========================================
+                   SELECT LETTER
+                ========================================= */
+
+                function selectLetter(index) {
+
+                    const alreadySelected =
+                        selectedLetters.some(
+                            function (item) {
+
+                                return item.index === index;
+
+                            }
+                        );
+
+                    if (alreadySelected) {
+
+                        return;
+
+                    }
+
+                    selectedLetters.push({
+
+                        index: index,
+
+                        letter: letters[index]
+
+                    });
+
+                    renderLetters();
+
+                    renderAnswer();
+
+                }
+
+
+                /* =========================================
+                   DISPLAY ANSWER
+                ========================================= */
+
+                function renderAnswer() {
+
+                    answerArea.innerHTML = "";
+
+                    if (
+                        selectedLetters.length === 0
+                    ) {
+
+                        answerArea.appendChild(
+                            answerPlaceholder
+                        );
+
+                        return;
+
+                    }
+
+                    selectedLetters.forEach(
+                        function (item, position) {
+
+                            const tile =
+                                document.createElement("div");
+
+                            tile.className =
+                                "answer-letter";
+
+                            tile.textContent =
+                                item.letter;
+
+                            tile.title =
+                                "Click to remove";
+
+                            tile.addEventListener(
+                                "click",
+                                function () {
+
+                                    removeLetter(position);
+
+                                }
+                            );
+
+                            answerArea.appendChild(tile);
+
+                        }
+                    );
+
+                }
+
+
+                /* =========================================
+                   REMOVE LETTER
+                ========================================= */
+
+                function removeLetter(position) {
+
+                    selectedLetters.splice(
+                        position,
+                        1
+                    );
+
+                    renderLetters();
+
+                    renderAnswer();
+
+                }
+
+
+                /* =========================================
+                   CLEAR
+                ========================================= */
+
+                function clearAnswer() {
+
+                    selectedLetters = [];
+
+                    renderLetters();
+
+                    renderAnswer();
+
+                }
+
+
+                /* =========================================
+                   SHUFFLE PUZZLE
+                ========================================= */
+
+                function shufflePuzzle() {
+
+                    letters =
+                        shuffleArray(letters);
+
+                    clearAnswer();
+
+                }
+
+
+                /* =========================================
+                   CHECK PUZZLE
+                ========================================= */
+
+                function checkPuzzle() {
+
+                    if (
+                        selectedLetters.length === 0
+                    ) {
+
+                        alert(
+                            "Please select some letters first."
+                        );
+
+                        return;
+
+                    }
+
+                    const playerAnswer =
+                        selectedLetters
+                            .map(
+                                function (item) {
+
+                                    return item.letter;
+
+                                }
+                            )
+                            .join("");
+
+
+                    answerInput.value =
+                        playerAnswer;
+
+
+                    answerForm.submit();
+
+                }
+
+
+                /* =========================================
+                   BUTTON EVENTS
+                ========================================= */
+
+                shuffleButton.addEventListener(
+                    "click",
+                    shufflePuzzle
+                );
+
+                clearButton.addEventListener(
+                    "click",
+                    clearAnswer
+                );
+
+                checkButton.addEventListener(
+                    "click",
+                    checkPuzzle
+                );
+
+
+                /* =========================================
+                   PROGRESS BAR
+                ========================================= */
+
+                const progress =
+                    progressBar.dataset.progress;
+
+                if (progress) {
+
+                    progressBar.style.width =
+                        progress + "%";
+
+                }
+
+
+                /* =========================================
+                   START PUZZLE
+                ========================================= */
+
+                createLetters();
+
+            }
+
+        );
+
+    </script>
+
+</body>
+</html>

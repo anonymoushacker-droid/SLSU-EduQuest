@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Puzzle Result - SLSU EduQuest</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="quiz-page">
+
+
+    <!-- ==============================
+         NAVIGATION
+    =============================== -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="login-btn"
+            >
+                Dashboard
+            </a>
+
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+
+    <!-- ==============================
+         RESULT
+    =============================== -->
+
+    <main class="result-container">
+
+        <div class="result-card">
+
+
+            <!-- ICON -->
+
+            <div class="result-icon">
+                🧩
+            </div>
+
+
+            <!-- LABEL -->
+
+            <div class="result-label">
+                PUZZLE COMPLETE
+            </div>
+
+
+            <!-- TITLE -->
+
+            <h1>
+                Great Job!
+            </h1>
+
+
+            <!-- MESSAGE -->
+
+            {% if total > 0 and score == total %}
+
+                <p class="result-message">
+
+                    Perfect score! You solved every
+                    puzzle correctly. 🎉
+
+                </p>
+
+            {% elif total > 0 and score >= (total / 2) %}
+
+                <p class="result-message">
+
+                    Nice work! Keep practicing and
+                    you can get a perfect score next time.
+
+                </p>
+
+            {% else %}
+
+                <p class="result-message">
+
+                    Good effort! Try again and see
+                    if you can improve your score.
+
+                </p>
+
+            {% endif %}
+
+
+
+            <!-- SCORE -->
+
+            <div class="result-score">
+
+                <span>
+                    Your Score
+                </span>
+
+
+                <strong>
+                    {{ score }} / {{ total }}
+                </strong>
+
+            </div>
+
+
+
+            <!-- POINTS -->
+
+            <div class="earned-points">
+
+                <span>
+                    ⭐
+                </span>
+
+
+                <div>
+
+                    <small>
+                        POINTS EARNED
+                    </small>
+
+
+                    <strong>
+                        +{{ points_earned }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- INFORMATION -->
+
+            <p class="points-info">
+
+                You earned 10 points for every
+                correctly solved puzzle.
+
+            </p>
+
+
+
+            <!-- BUTTONS -->
+
+            <div class="result-buttons">
+
+
+                <!-- PLAY AGAIN -->
+
+                <a
+                    href="{{ url_for('puzzle') }}"
+                    class="primary-btn"
+                >
+                    🔄 Play Again
+                </a>
+
+
+                <!-- DASHBOARD -->
+
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="secondary-btn"
+                >
+                    ← Back to Dashboard
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
+
+</body>
+
+</html>

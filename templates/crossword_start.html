@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Start Crossword - SLSU EduQuest</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="quiz-page">
+
+
+    <!-- =================================
+         NAVIGATION
+    ================================== -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="login-btn"
+            >
+                Dashboard
+            </a>
+
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+
+    <!-- =================================
+         START CROSSWORD
+    ================================== -->
+
+    <main class="result-container">
+
+        <div class="result-card">
+
+
+            <!-- ICON -->
+
+            <div class="result-icon">
+                🧩
+            </div>
+
+
+
+            <!-- COURSE -->
+
+            <div class="result-label">
+                {{ course.short_name }} CROSSWORD
+            </div>
+
+
+
+            <!-- TITLE -->
+
+            <h1>
+                Crossword Challenge
+            </h1>
+
+
+
+            <!-- DESCRIPTION -->
+
+            <p class="result-message">
+
+                Test your knowledge by solving
+                the crossword clues related
+                to your course.
+
+            </p>
+
+
+
+            <!-- CHALLENGE INFO -->
+
+            <div class="result-score">
+
+                <span>
+                    Challenge
+                </span>
+
+                <strong>
+                    {{ crossword.words|length }} Words
+                </strong>
+
+            </div>
+
+
+
+            <!-- POINTS -->
+
+            <div class="earned-points">
+
+                <span>
+                    ⭐
+                </span>
+
+                <div>
+
+                    <small>
+                        POINTS PER CORRECT WORD
+                    </small>
+
+                    <strong>
+                        +5
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TOTAL POSSIBLE POINTS -->
+
+            <p class="points-info">
+
+                Each correct word earns
+                <strong>+5 points</strong>.
+
+                Complete all
+                <strong>{{ crossword.words|length }}</strong>
+                words to earn up to
+                <strong>{{ crossword.words|length * 5 }} points</strong>.
+
+            </p>
+
+
+
+            <!-- BUTTONS -->
+
+            <div class="result-buttons">
+
+
+                <!-- START -->
+
+                <form
+                    action="{{ url_for('start_crossword') }}"
+                    method="POST"
+                >
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                        style="border: none; cursor: pointer;"
+                    >
+                        🚀 Start Crossword
+                    </button>
+
+                </form>
+
+
+
+                <!-- BACK -->
+
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="secondary-btn"
+                >
+                    ← Back to Dashboard
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+
+    <!-- SCRIPT -->
+
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
+
+</body>
+
+</html>
+

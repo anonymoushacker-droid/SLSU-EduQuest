@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Start Puzzle - SLSU EduQuest</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="quiz-page">
+
+
+    <nav class="navbar">
+
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="login-btn"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <main class="result-container">
+
+        <div class="result-card">
+
+
+            <div class="result-icon">
+                🧩
+            </div>
+
+
+            <div class="result-label">
+                {{ course.short_name }} PUZZLE
+            </div>
+
+
+            <h1>
+                Knowledge Puzzle
+            </h1>
+
+
+            <p class="result-message">
+
+                Test what you know by solving
+                each educational puzzle.
+
+            </p>
+
+
+            <div class="result-score">
+
+                <span>
+                    Number of Questions
+                </span>
+
+                <strong>
+                    {{ total_questions }}
+                </strong>
+
+            </div>
+
+
+            <div class="earned-points">
+
+                <span>⭐</span>
+
+                <div>
+
+                    <small>
+                        POINTS PER CORRECT ANSWER
+                    </small>
+
+                    <strong>
+                        +10
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <p class="points-info">
+
+                Choose the answer you think is correct.
+                Complete all questions to earn points.
+
+            </p>
+
+
+            <div class="result-buttons">
+
+
+                <form
+                    action="{{ url_for('start_puzzle') }}"
+                    method="POST"
+                >
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                        style="border: none; cursor: pointer;"
+                    >
+                        🚀 Start Puzzle
+                    </button>
+
+                </form>
+
+
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="secondary-btn"
+                >
+                    ← Back to Dashboard
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
+
+</body>
+
+</html>

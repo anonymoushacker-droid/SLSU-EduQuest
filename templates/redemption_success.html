@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Reward Redeemed - SLSU EduQuest
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="quiz-page">
+
+
+    <nav class="navbar">
+
+        <div class="nav-logo">
+            SLSU EduQuest
+        </div>
+
+        <div class="nav-links">
+
+            <a href="{{ url_for('dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('logout') }}">
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <main class="result-container">
+
+
+        <div class="result-card">
+
+
+            <div class="result-icon">
+                🎁
+            </div>
+
+
+            <h1>
+                Reward Redeemed!
+            </h1>
+
+
+            <p>
+                Congratulations, {{ student.name }}!
+            </p>
+
+
+            <div class="result-score">
+
+                <span>
+                    Reward
+                </span>
+
+                <strong>
+                    {{ reward.name }}
+                </strong>
+
+            </div>
+
+
+            <div class="earned-points">
+
+                -{{ reward.points }} Points
+
+            </div>
+
+            <div
+    style="
+        margin: 25px auto;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        max-width: 350px;
+    "
+>
+
+    <h3>
+        Your Redemption Code
+    </h3>
+
+    <strong
+        style="
+            font-size: 28px;
+            letter-spacing: 3px;
+        "
+    >
+        {{ reward.code }}
+    </strong>
+
+
+    <div
+        id="qrcode"
+        style="
+            margin: 20px auto;
+            width: 180px;
+            height: 180px;
+        "
+    ></div>
+
+
+    <p>
+        Show this QR code at the
+        school claiming station.
+    </p>
+
+</div>
+
+
+            <p>
+                Please proceed to the designated
+                school claiming station to claim
+                your reward.
+            </p>
+
+
+            <div class="result-buttons">
+
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="play-game-btn"
+                >
+                    Back to Dashboard
+                </a>
+
+            </div>
+
+
+        </div>
+
+
+    </main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+
+    new QRCode(
+        document.getElementById("qrcode"),
+        {
+            text: "{{ reward.code }}",
+            width: 180,
+            height: 180
+        }
+    );
+
+</script>
+
+</body>
+
+</html>

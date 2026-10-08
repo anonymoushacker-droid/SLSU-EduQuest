@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Start Quiz - SLSU EduQuest</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="quiz-page">
+
+
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar">
+
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="login-btn"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- QUIZ START SECTION -->
+    <main class="result-container">
+
+        <div class="result-card">
+
+
+            <!-- ICON -->
+            <div class="result-icon">
+                🧠
+            </div>
+
+
+            <!-- COURSE -->
+            <div class="result-label">
+                {{ course.short_name }} QUIZ
+            </div>
+
+
+            <!-- TITLE -->
+            <h1>
+                Test Your Knowledge
+            </h1>
+
+
+            <!-- DESCRIPTION -->
+            <p class="result-message">
+
+                Answer the questions and earn points
+                for every correct answer.
+
+            </p>
+
+
+            <!-- NUMBER OF QUESTIONS -->
+            <div class="result-score">
+
+                <span>
+                    Questions Per Attempt
+                </span>
+
+                <strong>
+                    Up to {{ total_questions }}
+                </strong>
+
+            </div>
+
+
+            <!-- POINTS -->
+            <div class="earned-points">
+
+                <span>⭐</span>
+
+                <div>
+
+                    <small>
+                        POINTS PER CORRECT ANSWER
+                    </small>
+
+                    <strong>
+                        +10
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- INFORMATION -->
+            <p class="points-info">
+
+                The questions and answer choices
+                will be shuffled every time you start
+                a new quiz.
+
+            </p>
+
+
+            <!-- BUTTONS -->
+            <div class="result-buttons">
+
+
+                <!-- START QUIZ -->
+                <form
+                    action="{{ url_for('start_quiz') }}"
+                    method="POST"
+                >
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                        style="border: none; cursor: pointer;"
+                    >
+                        🚀 Start Quiz
+                    </button>
+
+                </form>
+
+
+                <!-- BACK -->
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="secondary-btn"
+                >
+                    ← Back to Dashboard
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+    <!-- JAVASCRIPT -->
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
+
+</body>
+
+</html>

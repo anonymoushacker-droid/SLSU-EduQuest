@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Quiz - SLSU EduQuest</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="quiz-page">
+
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+        <div class="nav-buttons">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="login-btn"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="register-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- QUIZ -->
+    <main class="game-container">
+
+
+        <!-- HEADER -->
+        <div class="game-header">
+
+            <div class="game-badge">
+                🧠 {{ course_code }} QUIZ
+            </div>
+
+            <h1>
+                Test Your Knowledge
+            </h1>
+
+            <p>
+                Choose the best answer for each question.
+            </p>
+
+        </div>
+
+
+        <!-- QUIZ CARD -->
+        <div class="game-card">
+
+
+            <!-- QUESTION NUMBER -->
+            <div class="question-number">
+
+                Question
+                {{ question_number }}
+                of
+                {{ total_questions }}
+
+            </div>
+
+
+            <!-- PROGRESS BAR -->
+            <div
+                class="quiz-progress"
+                style="
+                    width: 100%;
+                    height: 8px;
+                    background: #e5eaf1;
+                    border-radius: 10px;
+                    margin-bottom: 30px;
+                    overflow: hidden;
+                "
+            >
+
+                <div
+                    class="quiz-progress-bar"
+                    data-progress="{{ (question_number / total_questions) * 100 }}"
+                    style="
+                        height: 100%;
+                        background: #2475d0;
+                        border-radius: 10px;
+                        transition: width 0.3s ease;
+                    "
+                ></div>
+
+            </div>
+
+
+            <!-- QUESTION -->
+            <div class="question-box">
+
+                <h2>
+                    QUESTION
+                </h2>
+
+                <div class="question-text">
+
+                    {{ question.question }}
+
+                </div>
+
+            </div>
+
+
+            <!-- ANSWERS -->
+            <form
+                action="{{ url_for('quiz_answer') }}"
+                method="POST"
+                class="quiz-answer-form"
+            >
+
+
+                <div class="quiz-choices">
+
+
+                    {% for choice in question.choices %}
+
+                    <label class="quiz-choice">
+
+
+                        <input
+                            type="radio"
+                            name="answer"
+                            value="{{ choice }}"
+                            required
+                        >
+
+
+                        <span class="choice-letter">
+
+                            {{ "ABCD"[loop.index0] }}
+
+                        </span>
+
+
+                        <span class="choice-text">
+
+                            {{ choice }}
+
+                        </span>
+
+
+                    </label>
+
+                    {% endfor %}
+
+
+                </div>
+
+
+                <!-- SUBMIT -->
+                <button
+                    type="submit"
+                    class="primary-btn quiz-next-btn"
+                >
+
+                    {% if question_number == total_questions %}
+
+                        Finish Quiz ✓
+
+                    {% else %}
+
+                        Next Question →
+
+                    {% endif %}
+
+                </button>
+
+
+            </form>
+
+
+            <!-- CURRENT SCORE -->
+            <div class="current-score">
+
+                ⭐ Current Score:
+                <strong>{{ score }}</strong>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- BACK -->
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="back-link"
+        >
+
+            ← Back to Dashboard
+
+        </a>
+
+
+    </main>
+
+
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
+
+</body>
+
+</html>
