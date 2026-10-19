@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - SLSU EduQuest</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f7fc;
+            font-family: Arial, sans-serif;
+            color: #102a56;
+        }
+
+        .staff-navbar {
+            background: #102a56;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .staff-logo {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .staff-logo span {
+            color: #78b7ff;
+        }
+
+        .staff-role {
+            font-size: 13px;
+            background: #1d72d8;
+            padding: 7px 12px;
+            border-radius: 20px;
+        }
+
+        .staff-container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .staff-welcome {
+            background: white;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(16, 42, 86, 0.07);
+            margin-bottom: 28px;
+        }
+
+        .staff-welcome h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        .staff-welcome p {
+            color: #64748b;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .staff-section-title {
+            margin: 30px 0 18px;
+            font-size: 21px;
+        }
+
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 20px;
+        }
+
+        .staff-card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(16, 42, 86, 0.07);
+            border: 1px solid #e5edf7;
+        }
+
+        .staff-card-icon {
+            font-size: 32px;
+            margin-bottom: 14px;
+        }
+
+        .staff-card h3 {
+            margin: 0 0 10px;
+            font-size: 19px;
+        }
+
+        .staff-card p {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 45px;
+        }
+
+        .staff-card a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 11px 16px;
+            background: #1d72d8;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .staff-card a:hover {
+            background: #155bb0;
+        }
+
+        .coming-soon {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #eaf1f9;
+            color: #64748b;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .staff-footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            padding: 30px 15px;
+        }
+
+        @media (max-width: 600px) {
+            .staff-welcome h1 {
+                font-size: 23px;
+            }
+
+            .staff-container {
+                margin-top: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="staff-navbar">
+        <div class="staff-logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+
+        <div class="staff-role">
+            {{ staff_role|default('staff')|title }} Account
+        </div>
+    </header>
+
+    <main class="staff-container">
+
+        <section class="staff-welcome">
+            <h1>Welcome, {{ staff_name }}!</h1>
+            <p>
+                Welcome to the SLSU EduQuest Staff Dashboard.
+                Manage reward claims and access staff tools from this page.
+            </p>
+        </section>
+
+        <h2 class="staff-section-title">Staff Management Tools</h2>
+
+        <section class="staff-grid">
+
+            <!-- Claiming Station -->
+            <div class="staff-card">
+                <div class="staff-card-icon">🎫</div>
+                <h3>Claiming Station</h3>
+                <p>
+                    Verify a student's redemption code and mark a reward
+                    as claimed.
+                </p>
+                <a href="{{ url_for('claim_reward') }}">
+                    Open Claiming Station
+                </a>
+            </div>
+
+            <!-- Redemption History -->
+            <div class="staff-card">
+                <div class="staff-card-icon">📋</div>
+                <h3>Redemption History</h3>
+                <p>
+                    View student reward redemptions, codes, and claim statuses.
+                </p>
+                <span class="coming-soon">Coming in the next step</span>
+            </div>
+
+            <!-- Reward Inventory -->
+            <div class="staff-card">
+                <div class="staff-card-icon">🎁</div>
+                <h3>Reward Inventory</h3>
+                <p>
+                    View available rewards, required points, and remaining stock.
+                </p>
+                <span class="coming-soon">Coming in the next step</span>
+            </div>
+
+            <!-- Student Rewards -->
+            <div class="staff-card">
+                <div class="staff-card-icon">🎓</div>
+                <h3>Student Rewards</h3>
+                <p>
+                    Review student information and their reward-related records.
+                </p>
+                <span class="coming-soon">Coming in a later step</span>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="staff-footer">
+        SLSU EduQuest Staff Dashboard
+    </footer>
+
+</body>
+</html>

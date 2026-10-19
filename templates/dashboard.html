@@ -78,6 +78,19 @@
     <main class="dashboard-container">
 
 
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
         <!-- WELCOME -->
 
         <section class="dashboard-welcome">
@@ -384,24 +397,20 @@
                         🖨️
                     </div>
 
-                    <h3>
-                        Free Print
-                    </h3>
+                   <p>Get free black and white printing.</p>
 
                     <p>
                         Redeem your points for
                         school printing.
                     </p>
 
-                    <strong>
-                        100 Points
-                    </strong>
+                   <strong>50 Points</strong>
 
 
                     <form
-                        action="{{ url_for('redeem_reward', reward_name='free-print') }}"
-                        method="POST"
-                    >
+    action="{{ url_for('redeem_reward', reward_name='free-printing') }}"
+    method="POST"
+>
 
                         <button
                             type="submit"
@@ -424,33 +433,20 @@
                         📚
                     </div>
 
-                    <h3>
-                        School Reviewer
-                    </h3>
+                    <h3>Snack Reward</h3>
 
-                    <p>
-                        Redeem points for an
-                        available school reviewer.
-                    </p>
+<p>Redeem a free snack.</p>
 
-                    <strong>
-                        200 Points
-                    </strong>
+<strong>100 Points</strong>
 
-
-                    <form
-                        action="{{ url_for('redeem_reward', reward_name='school-reviewer') }}"
-                        method="POST"
-                    >
-
-                        <button
-                            type="submit"
-                            class="redeem-btn"
-                        >
-                            Redeem
-                        </button>
-
-                    </form>
+<form
+    action="{{ url_for('redeem_reward', reward_name='snack-reward') }}"
+    method="POST"
+>
+    <button type="submit" class="redeem-btn">
+        Redeem
+    </button>
+</form>
 
                 </div>
 

@@ -1,8 +1,20 @@
+import os
 import random
 import uuid
+from datetime import datetime, timezone
 
+from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for
+from supabase import Client, create_client
 from werkzeug.security import check_password_hash, generate_password_hash
+
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 # ============================================================
 # FLASK APPLICATION
@@ -12,17 +24,11 @@ app = Flask(__name__)
 
 app.secret_key = "slsu-eduquest-development-key"
 
-
 # ============================================================
-# TEMPORARY DATABASE
+# DATABASE
 # ============================================================
-# NOTE:
-# This is temporary.
-# Later, these will be replaced with Supabase tables.
-
-users = {}
-
-redemptions = {}
+# Student records, points, rewards, and redemptions
+# are stored in Supabase.
 
 
 # ============================================================
@@ -1281,19 +1287,6 @@ crossword_questions = {
 # REWARDS
 # ============================================================
 
-rewards = {
-
-    "free-print": {
-        "name": "Free Print",
-        "points": 100
-    },
-
-    "school-reviewer": {
-        "name": "School Reviewer",
-        "points": 200
-    }
-
-}
 
 
 # ============================================================
@@ -1316,7 +1309,6 @@ def home():
 # ============================================================
 # REGISTER
 # ============================================================
-
 @app.route(
     "/register",
     methods=["GET", "POST"]
@@ -1350,6 +1342,7 @@ def register():
             ""
         ).strip().upper()
 
+        # Check if all fields are complete
         if not name or not student_id or not email or not password or not course:
 
             flash(
@@ -1361,6 +1354,7 @@ def register():
                 url_for("register")
             )
 
+        # Check valid course
         if course not in courses:
 
             flash(
@@ -1372,7 +1366,17 @@ def register():
                 url_for("register")
             )
 
-        if email in users:
+        # Check if email already exists in Supabase
+        existing_email = (
+            supabase
+            .table("students")
+            .select("id")
+            .eq("email", email)
+            .limit(1)
+            .execute()
+        )
+
+        if existing_email.data:
 
             flash(
                 "An account with this email already exists.",
@@ -1383,7 +1387,34 @@ def register():
                 url_for("login")
             )
 
-        users[email] = {
+        # Check if student ID already exists
+        existing_student_id = (
+            supabase
+            .table("students")
+            .select("id")
+            .eq("student_id", student_id)
+            .limit(1)
+            .execute()
+        )
+
+        if existing_student_id.data:
+
+            flash(
+                "This Student ID is already registered.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        # Hash the password
+        hashed_password = generate_password_hash(
+            password
+        )
+
+        # Save student to Supabase
+        supabase.table("students").insert({
 
             "name": name,
 
@@ -1391,15 +1422,13 @@ def register():
 
             "email": email,
 
-            "password": generate_password_hash(
-                password
-            ),
+            "password": hashed_password,
 
             "course": course,
 
             "points": 0
 
-        }
+        }).execute()
 
         flash(
             "Registration successful. Please login.",
@@ -1414,7 +1443,6 @@ def register():
         "register.html",
         courses=courses
     )
-
 
 # ============================================================
 # LOGIN
@@ -1438,9 +1466,17 @@ def login():
             ""
         )
 
-        student = users.get(
-            email
+        # Find student in Supabase
+        response = (
+            supabase
+            .table("students")
+            .select("*")
+            .eq("email", email)
+            .limit(1)
+            .execute()
         )
+
+        student = response.data[0] if response.data else None
 
         if not student:
 
@@ -1453,6 +1489,7 @@ def login():
                 url_for("login")
             )
 
+        # Check hashed password
         if not check_password_hash(
             student["password"],
             password
@@ -1467,6 +1504,7 @@ def login():
                 url_for("login")
             )
 
+        # Save login session
         session["user_email"] = email
 
         flash(
@@ -1482,6 +1520,64 @@ def login():
         "login.html"
     )
 
+
+# ============================================================
+# STAFF LOGIN
+# ============================================================
+@app.route("/staff/login", methods=["GET", "POST"])
+def staff_login():
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        # Find staff account in Supabase
+        response = (
+            supabase.table("staff_users")
+            .select("*")
+            .eq("email", email)
+            .limit(1)
+            .execute()
+        )
+
+        staff = response.data[0] if response.data else None
+
+        # Verify account and password
+        if not staff or not check_password_hash(
+            staff["password_hash"], password
+        ):
+            flash("Invalid staff email or password.", "error")
+            return redirect(url_for("staff_login"))
+
+        # Create a separate staff session
+        session.pop("user_email", None)
+        session["staff_id"] = staff["id"]
+        session["staff_email"] = staff["email"]
+        session["staff_name"] = staff["name"]
+        session["staff_role"] = staff["role"]
+
+        flash("Staff login successful!", "success")
+        return redirect(url_for("staff_dashboard"))
+
+    return render_template("staff_login.html")
+
+
+# ============================================================
+# STAFF DASHBOARD
+# ============================================================
+@app.route("/staff/dashboard")
+def staff_dashboard():
+
+    # Only logged-in staff can access this page
+    if "staff_id" not in session:
+        flash("Please log in with your staff account.", "error")
+        return redirect(url_for("staff_login"))
+
+    return render_template(
+        "staff_dashboard.html",
+        staff_name=session.get("staff_name", "Staff"),
+        staff_role=session.get("staff_role", "staff")
+    )
 
 # ============================================================
 # DASHBOARD
@@ -1503,9 +1599,17 @@ def dashboard():
 
     email = session["user_email"]
 
-    student = users.get(
-        email
+    # Get student from Supabase
+    response = (
+        supabase
+        .table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
     )
+
+    student = response.data[0] if response.data else None
 
     if not student:
 
@@ -1545,6 +1649,8 @@ def dashboard():
     )
 
 
+
+
 # ============================================================
 # LOGOUT
 # ============================================================
@@ -1567,7 +1673,6 @@ def logout():
 # ============================================================
 # QUIZ
 # ============================================================
-
 @app.route("/quiz", defaults={"game_type": "quiz"})
 @app.route("/quiz/<game_type>")
 def quiz(game_type):
@@ -1577,11 +1682,22 @@ def quiz(game_type):
 
     email = session["user_email"]
 
-    if email not in users:
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in quiz_questions:
@@ -1615,19 +1731,29 @@ def start_quiz():
 
     email = session["user_email"]
 
-    if email not in users:
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in quiz_questions:
         flash("Quiz is not available for your course yet.", "error")
         return redirect(url_for("dashboard"))
 
-    # Make a fresh copy so one student's attempt never changes
-    # the original question bank.
+    # Make a fresh copy of the questions
     questions = [
         {
             "question": item["question"],
@@ -1637,13 +1763,13 @@ def start_quiz():
         for item in quiz_questions[course_code]
     ]
 
-    # Randomize the question order for every new attempt.
+    # Randomize question order
     random.shuffle(questions)
 
-    # Use up to 10 questions per attempt.
+    # Use up to 10 questions
     questions = questions[:10]
 
-    # Randomize the answer choices for every selected question.
+    # Randomize answer choices
     for question in questions:
         random.shuffle(question["choices"])
 
@@ -1676,7 +1802,18 @@ def quiz_answer():
         return redirect(url_for("login"))
 
     email = session["user_email"]
-    student = users.get(email)
+
+    # Get student from Supabase
+    response = (
+        supabase
+        .table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
 
     if not student:
         session.clear()
@@ -1692,9 +1829,15 @@ def quiz_answer():
     if current_index < 0 or current_index >= len(questions):
         return redirect(url_for("quiz_result"))
 
-    selected_answer = request.form.get("answer", "").strip()
+    selected_answer = request.form.get(
+        "answer", ""
+    ).strip()
+
     current_question = questions[current_index]
-    correct_answer = str(current_question.get("answer", "")).strip()
+
+    correct_answer = str(
+        current_question.get("answer", "")
+    ).strip()
 
     if selected_answer.lower() == correct_answer.lower():
         score += 1
@@ -1720,6 +1863,7 @@ def quiz_answer():
 
 
 
+
 # ============================================================
 # QUIZ RESULT
 # ============================================================
@@ -1728,36 +1872,42 @@ def quiz_answer():
 def quiz_result():
 
     if "user_email" not in session:
-        return redirect(
-            url_for("login")
-        )
+        return redirect(url_for("login"))
 
-    score = session.get(
-        "quiz_score",
-        0
-    )
-
-    questions = session.get(
-        "quiz_questions",
-        []
-    )
-
+    score = session.get("quiz_score", 0)
+    questions = session.get("quiz_questions", [])
     total = len(questions)
 
     points_earned = score * 10
-
     email = session["user_email"]
 
-    student = users.get(
-        email
+    # Get student from Supabase
+    response = (
+        supabase
+        .table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
     )
 
-    if student and not session.get(
-        "quiz_points_awarded",
-        False
-    ):
+    student = response.data[0] if response.data else None
 
-        student["points"] += points_earned
+    if not student:
+        session.clear()
+        flash("Please login again.", "error")
+        return redirect(url_for("login"))
+
+    # Award points only once for this quiz attempt
+    if not session.get("quiz_points_awarded", False):
+
+        new_points = student["points"] + points_earned
+
+        supabase.table("students").update({
+            "points": new_points
+        }).eq("email", email).execute()
+
+        student["points"] = new_points
 
         session["quiz_points_awarded"] = True
 
@@ -1770,10 +1920,10 @@ def quiz_result():
     )
 
 
+
 # ============================================================
 # PUZZLE
 # ============================================================
-
 @app.route("/puzzle", defaults={"game_type": "puzzle"})
 @app.route("/puzzle/<game_type>")
 def puzzle(game_type):
@@ -1783,11 +1933,22 @@ def puzzle(game_type):
 
     email = session["user_email"]
 
-    if email not in users:
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in puzzle_questions:
@@ -1809,11 +1970,9 @@ def puzzle(game_type):
         )
     )
 
-
 # ============================================================
 # PUZZLE START
 # ============================================================
-
 @app.route("/puzzle/start", methods=["POST"])
 def start_puzzle():
 
@@ -1822,11 +1981,21 @@ def start_puzzle():
 
     email = session["user_email"]
 
-    if email not in users:
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in puzzle_questions:
@@ -1852,7 +2021,6 @@ def start_puzzle():
         score=0
     )
 
-
 # ============================================================
 # PUZZLE ANSWER
 # ============================================================
@@ -1860,7 +2028,6 @@ def start_puzzle():
 # ============================================================
 # PUZZLE ANSWER
 # ============================================================
-
 @app.route("/puzzle/answer", methods=["POST"])
 def puzzle_answer():
 
@@ -1869,11 +2036,20 @@ def puzzle_answer():
 
     email = session["user_email"]
 
-    if email not in users:
-        session.clear()
-        return redirect(url_for("login"))
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
 
-    student = users[email]
+    student = response.data[0] if response.data else None
+
+    if not student:
+        session.clear()
+        flash("Please login again.", "error")
+        return redirect(url_for("login"))
 
     questions = session.get("puzzle_questions", [])
     current_index = session.get("puzzle_index", 0)
@@ -1888,20 +2064,14 @@ def puzzle_answer():
 
     current_question = questions[current_index]
 
-    # Get correct answer
     correct_answer = str(
         current_question.get("answer", "")
     ).strip()
 
-    # Get student's answer
     selected_answer = request.form.get(
-        "answer",
-        ""
+        "answer", ""
     ).strip()
 
-    # Normalize both answers
-    # This removes spaces, hyphens, and punctuation
-    # and makes uppercase/lowercase irrelevant.
     normalized_correct = "".join(
         character
         for character in correct_answer.upper()
@@ -1914,21 +2084,17 @@ def puzzle_answer():
         if character.isalnum()
     )
 
-    # Check answer
     if normalized_selected == normalized_correct:
         score += 1
 
-    # Move to next question
     current_index += 1
 
     session["puzzle_score"] = score
     session["puzzle_index"] = current_index
 
-    # Last question
     if current_index >= len(questions):
         return redirect(url_for("puzzle_result"))
 
-    # Next question
     next_question = questions[current_index]
 
     return render_template(
@@ -1944,37 +2110,48 @@ def puzzle_answer():
 # ============================================================
 # PUZZLE RESULT
 # ============================================================
-
 @app.route("/puzzle/result")
 def puzzle_result():
 
-    # Make sure the student is logged in
     if "user_email" not in session:
         return redirect(url_for("login"))
 
     email = session["user_email"]
 
-    # Check if the user exists
-    if email not in users:
-        session.clear()
-        return redirect(url_for("login"))
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
 
-    student = users[email]
+    student = response.data[0] if response.data else None
+
+    if not student:
+        session.clear()
+        flash("Please login again.", "error")
+        return redirect(url_for("login"))
 
     # Get puzzle results
     score = session.get("puzzle_score", 0)
     questions = session.get("puzzle_questions", [])
-
     total = len(questions)
 
-    # 10 points for every correct answer
+    # 10 points per correct answer
     points_earned = score * 10
 
-    # Add points only once
+    # Add points only once per attempt
     if not session.get("puzzle_points_awarded", False):
 
-        student["points"] += points_earned
+        new_points = student["points"] + points_earned
 
+        supabase.table("students").update({
+            "points": new_points
+        }).eq("id", student["id"]).execute()
+
+        student["points"] = new_points
         session["puzzle_points_awarded"] = True
 
     return render_template(
@@ -1987,9 +2164,8 @@ def puzzle_result():
 
 
 # ============================================================
-# CROSSWORD
+# CROSSWORD START
 # ============================================================
-
 @app.route("/crossword", defaults={"game_type": "crossword"})
 @app.route("/crossword/<game_type>")
 def crossword(game_type):
@@ -1999,11 +2175,22 @@ def crossword(game_type):
 
     email = session["user_email"]
 
-    if email not in users:
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in crossword_questions:
@@ -2015,9 +2202,7 @@ def crossword(game_type):
 
     course = courses[course_code]
 
-    crossword_data = crossword_questions[
-        course_code
-    ]
+    crossword_data = crossword_questions[course_code]
 
     return render_template(
         "crossword_start.html",
@@ -2029,9 +2214,8 @@ def crossword(game_type):
 
 
 # ============================================================
-# CROSSWORD START
+# START CROSSWORD GAME
 # ============================================================
-
 @app.route("/crossword/start", methods=["POST"])
 def start_crossword():
 
@@ -2040,42 +2224,45 @@ def start_crossword():
 
     email = session["user_email"]
 
-    if email not in users:
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in crossword_questions:
-        flash(
-            "Crossword is not available for your course yet.",
-            "error"
-        )
+        flash("Crossword is not available for your course yet.", "error")
         return redirect(url_for("dashboard"))
 
-    crossword_data = crossword_questions[
-        course_code
-    ]
+    course = courses[course_code]
+    crossword_data = crossword_questions[course_code]
 
-    # Start a new crossword attempt
-    session["crossword_started"] = True
+    # Reset the points-awarded flag for this new attempt
     session["crossword_points_awarded"] = False
 
-    
     return render_template(
         "crossword.html",
-        crossword=crossword_data,
+        student=student,
+        course=course,
         course_code=course_code,
-        student=student
+        crossword=crossword_data
     )
-
 
 # ============================================================
 # CROSSWORD ANSWER
 # ============================================================
-
-
 @app.route("/crossword/answer", methods=["POST"])
 def crossword_answer():
 
@@ -2084,11 +2271,22 @@ def crossword_answer():
 
     email = session["user_email"]
 
-    if email not in users:
+    # Get student from Supabase
+    response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+
+    student = response.data[0] if response.data else None
+
+    if not student:
         session.clear()
+        flash("Please login again.", "error")
         return redirect(url_for("login"))
 
-    student = users[email]
     course_code = student["course"]
 
     if course_code not in crossword_questions:
@@ -2127,10 +2325,19 @@ def crossword_answer():
             "is_correct": is_correct
         })
 
+    # 5 points per correct answer
     points_earned = correct_count * 5
 
+    # Save points to Supabase only once per session attempt
     if not session.get("crossword_points_awarded", False):
-        student["points"] += points_earned
+
+        new_points = student["points"] + points_earned
+
+        supabase.table("students").update({
+            "points": new_points
+        }).eq("id", student["id"]).execute()
+
+        student["points"] = new_points
         session["crossword_points_awarded"] = True
 
     return render_template(
@@ -2143,134 +2350,130 @@ def crossword_answer():
         student=student,
         course_code=course_code
     )
-
 # ============================================================
 # REDEEM REWARD
 # ============================================================
 
-@app.route(
-    "/redeem/<reward_name>",
-    methods=["POST"]
-)
+@app.route("/redeem/<reward_name>", methods=["POST"])
 def redeem_reward(reward_name):
 
     if "user_email" not in session:
-        return redirect(
-            url_for("login")
-        )
+        return redirect(url_for("login"))
 
     email = session["user_email"]
 
-    student = users.get(
-        email
+    # Get student from Supabase
+    student_response = (
+        supabase.table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
     )
+
+    student = student_response.data[0] if student_response.data else None
 
     if not student:
         session.clear()
-        return redirect(
-            url_for("login")
-        )
+        flash("Please login again.", "error")
+        return redirect(url_for("login"))
 
-    reward = rewards.get(
-        reward_name
+    # Convert URL slug to reward name
+    reward_slug = reward_name.replace("-", " ").strip()
+
+    # Search for reward without case sensitivity
+    reward_response = (
+        supabase.table("rewards")
+        .select("*")
+        .ilike("name", reward_slug)
+        .limit(1)
+        .execute()
     )
+
+    reward = reward_response.data[0] if reward_response.data else None
 
     if not reward:
-
         flash(
-            "Reward not found.",
+            f"Reward not found in Supabase. Searched for: {reward_slug}",
             "error"
         )
+        return redirect(url_for("dashboard"))
 
-        return redirect(
-            url_for("dashboard")
-        )
+    # Check required points and stock
+    required_points = reward["points_required"]
 
-    if student["points"] < reward["points"]:
+    if reward["stock"] <= 0:
+        flash("This reward is out of stock.", "error")
+        return redirect(url_for("dashboard"))
 
-        flash(
-            "You don't have enough points for this reward.",
-            "error"
-        )
-
-        return redirect(
-            url_for("dashboard")
-        )
-
-    # Deduct points
-    student["points"] -= reward["points"]
+    if student["points"] < required_points:
+        flash("You don't have enough points for this reward.", "error")
+        return redirect(url_for("dashboard"))
 
     # Generate redemption code
-    redemption_code = (
-        str(uuid.uuid4())
-        .replace("-", "")
-        .upper()[:8]
-    )
+    redemption_code = str(uuid.uuid4()).replace("-", "").upper()[:8]
 
-    # Save redemption
-    redemptions[redemption_code] = {
+    # Deduct points
+    new_points = student["points"] - required_points
 
-        "student_name": student["name"],
+    supabase.table("students").update({
+        "points": new_points
+    }).eq("id", student["id"]).execute()
 
-        "student_id": student["student_id"],
+    # Reduce reward stock
+    supabase.table("rewards").update({
+        "stock": reward["stock"] - 1
+    }).eq("id", reward["id"]).execute()
 
-        "reward_name": reward["name"],
-
-        "points": reward["points"],
-
-        "claimed": False
-
-    }
+    # Create redemption record
+    supabase.table("redemptions").insert({
+        "student_id": student["id"],
+        "reward_id": reward["id"],
+        "redemption_code": redemption_code,
+        "qr_data": redemption_code,
+        "status": "pending"
+    }).execute()
 
     session["redeemed_reward"] = {
-
         "name": reward["name"],
-
-        "points": reward["points"],
-
+        "points": required_points,
         "code": redemption_code
-
     }
 
-    return redirect(
-        url_for("redemption_success")
-    )
+    return redirect(url_for("redemption_success"))
 
 
 # ============================================================
 # REDEMPTION SUCCESS
 # ============================================================
-
 @app.route("/redemption-success")
 def redemption_success():
 
     if "user_email" not in session:
-        return redirect(
-            url_for("login")
-        )
+        return redirect(url_for("login"))
 
-    reward = session.get(
-        "redeemed_reward"
-    )
+    reward = session.get("redeemed_reward")
 
     if not reward:
-        return redirect(
-            url_for("dashboard")
-        )
+        return redirect(url_for("dashboard"))
 
     email = session["user_email"]
 
-    student = users.get(
-        email
+    # Get student from Supabase
+    response = (
+        supabase
+        .table("students")
+        .select("*")
+        .eq("email", email)
+        .limit(1)
+        .execute()
     )
 
+    student = response.data[0] if response.data else None
+
     if not student:
-
         session.clear()
-
-        return redirect(
-            url_for("login")
-        )
+        return redirect(url_for("login"))
 
     return render_template(
         "redemption_success.html",
@@ -2278,18 +2481,21 @@ def redemption_success():
         student=student
     )
 
-
 # ============================================================
 # CLAIMING STATION
-# ============================================================
-
-@app.route(
-    "/claim",
-    methods=["GET", "POST"]
-)
+#
+@app.route("/claim", methods=["GET", "POST"])
 def claim_reward():
 
+    # Block access unless staff is logged in
+    if "staff_id" not in session:
+        return redirect(url_for("staff_login"))
+
     result = None
+
+    # Keep the rest of your existing claim_reward() code here
+
+    # Keep the rest of your existing claim_reward() code below
 
     if request.method == "POST":
 
@@ -2298,58 +2504,87 @@ def claim_reward():
             ""
         ).strip().upper()
 
-        redemption = redemptions.get(
-            code
+        # Find redemption in Supabase
+        response = (
+            supabase
+            .table("redemptions")
+            .select(
+                "id, redemption_code, status, claimed_at, "
+                "students(name, student_id), rewards(name)"
+            )
+            .eq("redemption_code", code)
+            .limit(1)
+            .execute()
+        )
+
+        redemption = (
+            response.data[0]
+            if response.data
+            else None
         )
 
         if not redemption:
 
             result = {
-
                 "success": False,
-
-                "message":
-                    "Invalid redemption code."
-
+                "message": "Invalid redemption code."
             }
 
-        elif redemption["claimed"]:
+        elif redemption["status"] == "claimed":
 
             result = {
-
                 "success": False,
+                "message": "This reward has already been claimed."
+            }
 
-                "message":
-                    "This reward has already been claimed."
+        elif redemption["status"] != "pending":
 
+            result = {
+                "success": False,
+                "message": "This redemption is not available for claiming."
             }
 
         else:
 
-            redemption["claimed"] = True
+            # Mark the redemption as claimed
+            update_response = (
+                supabase
+                .table("redemptions")
+                .update({
+                    "status": "claimed",
+                    "claimed_at": datetime.now(timezone.utc).isoformat()
+                })
+                .eq("id", redemption["id"])
+                .eq("status", "pending")
+                .execute()
+            )
 
-            result = {
+            if not update_response.data:
 
-                "success": True,
+                result = {
+                    "success": False,
+                    "message": "This reward may already have been claimed. Please verify the code again."
+                }
 
-                "student_name":
-                    redemption["student_name"],
+            else:
 
-                "student_id":
-                    redemption["student_id"],
+                student = redemption.get("students") or {}
+                reward = redemption.get("rewards") or {}
 
-                "reward_name":
-                    redemption["reward_name"],
-
-                "message":
-                    "Reward verified successfully!"
-
-            }
+                result = {
+                    "success": True,
+                    "student_name": student.get("name", "Unknown"),
+                    "student_id": student.get("student_id", "Unknown"),
+                    "reward_name": reward.get("name", "Unknown"),
+                    "message": "Reward verified successfully!"
+                }
 
     return render_template(
         "claim.html",
         result=result
     )
+
+
 
 
 # ============================================================

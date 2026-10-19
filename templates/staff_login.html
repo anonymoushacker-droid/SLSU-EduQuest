@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Login - SLSU EduQuest</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .staff-login-wrapper {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 16px;
+        }
+
+        .staff-login-card {
+            width: 100%;
+            max-width: 430px;
+            padding: 32px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(16, 42, 86, 0.12);
+        }
+
+        .staff-login-card h1 {
+            color: #102a56;
+            margin-bottom: 8px;
+        }
+
+        .staff-login-card p {
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+
+        .staff-login-card label {
+            display: block;
+            margin: 16px 0 8px;
+            font-weight: 600;
+        }
+
+        .staff-login-card input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .staff-login-card button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #1d72d8;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .staff-login-card button:hover {
+            background: #155bb0;
+        }
+
+        .staff-error {
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            🎓 SLSU <span>EduQuest</span>
+        </div>
+    </header>
+
+    <main class="staff-login-wrapper">
+        <section class="staff-login-card">
+            <h1>Staff Login</h1>
+            <p>Sign in to manage EduQuest rewards and claims.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="staff-error">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('staff_login') }}">
+                <label for="email">Staff Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit">Log In to Staff Dashboard</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
